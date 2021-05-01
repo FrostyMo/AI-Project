@@ -1,215 +1,111 @@
 import numpy
-import pandas as pd
 from random import randint
 import collections
 from copy import deepcopy
-#-------------------------Classes-------------------------#
-
-
-class Student:
-    def __init__(self, name, courses1=None):
-        self.name = name
-        if courses1 is None:
-            self.courses = []
-        else:
-            self.courses = courses1
-
-    # Add a course for the student
-    def add_Course(self, course):
-        self.courses.append(course)
-
-    # Add a course for the student
-    def add_Courses(self, courses1):
-        for course in courses1:
-            self.courses.append(course)
-
-    # Add new courses together
-    def initialize_Courses(self, courses1):
-        self.courses = courses1
-
-    # Compare names since unique
-    def __eq__(self, student):
-        return self.name == student.name
-
-    # Return true if any course same for two students
-    def overlaps(self, student):
-        set1 = set(self.courses)
-        set2 = set(student.courses)
-        if (set1 & set2):
-            return True
-        return False
-
-    # Check with 2 groups as @param
-    def groups_Overlap(self, grp1, grp2):
-        for student1 in grp1:
-            for student2 in grp2:
-                if student1.overlaps(student2):
-                    return True
-        return False
-
-    # Check if at least 3 courses assigned
-    def is_Valid(self):
-        if (len(self.courses) >= 3):
-            return True
-        return False
-
-    # Check if at least 3 courses assigned to @param
-    def is_Student_Valid(self, student):
-        if (len(student.courses) >= 3):
-            return True
-        return False
-
-    def display_Student(self):
-        print(self.name)
-        print(self.courses)
-
-
-class Session:
-    def __init__(self):
-        self.teachers = []
-        self.courseIDs = []
-        self.studentGroups = []
-        self.duration = 3
-        self.classRoomIDs = []
-        self.num_exams = 0
-
-    def add_to_Session(self, teacher, courseID, studentGroup, classRoomID, duration=3):
-        self.teachers.append(teacher)
-        self.courseIDs.append(courseID)
-        self.studentGroups.append(studentGroup)
-        self.duration = duration
-        self.classRoomIDs.append(classRoomID)
-        self.num_exams += 1
-
-    # Check whether a session has student groups that
-    # have overlapping exams
-    def overlapping_Students(self):
-        tester = Student("Tester")
-        for i, grp1 in enumerate(self.studentGroups):
-            for j, grp2 in enumerate(self.studentGroups):
-                if i is not j:
-                    if tester.groups_Overlap(grp1, grp2):
-                        return True
-        return False
-
-    # Check whether a session has teachers that
-    # have overlapping exams
-    def overlapping_Teachers(self):
-        if (len(set(self.teachers)) == len(self.teachers)):
-            return False
-        return True
-
-    def display_Session(self):
-        print("+++++++++++++++++++++++++++++++")
-        print("Teachers: ", self.teachers)
-        print("Courses: ", self.courseIDs)
-        for i, group in enumerate(self.studentGroups):
-            print("Group {}:".format(i+1), end=" [ ")
-            for student in group:
-                print(student.name, end=" ")
-            print("]", end=" ")
-        print("")
-        print("Class Rooms: ", self.classRoomIDs)
-        print("Session Duration: {} Hours".format(self.duration))
-        print("Total Exams: ", self.num_exams)
-        print("+++++++++++++++++++++++++++++++")
-
-
-# Day contains 2 sessions max
-# Each session contains further schedule
-class Day:
-    max_ses = 2
-
-    def __init__(self):
-        self.sessions = []
-
-    # Add only if 2 sessions not added already
-    def add_Session(self, session):
-        if (len(self.sessions) < self.max_ses):
-            self.sessions.append(session)
-            return True
-        return False
-
-    # Returns True if same teacher in 2 session on the same day
-    def consecutive_Teachers(self):
-        set1 = set(self.sessions[0].teachers)
-        set2 = set(self.sessions[1].teachers)
-        if (set1 & set2):
-            return True
-        return False
-
-
-class Chromosome:
-    max_days = 10
-
-    def __init__(self, days=[]):
-        self.days = days
-
-    def add_Day(self, day):
-        if (len(self.days) < 10):
-            self.days.append(day)
-            return True
-        return False
-
-    def duplicate_Exams(self):
-        list_exam = []
-        for day in self.days:
-            for session in day.sessions:
-                for exam in session.courseIDs:
-                    list_exam.append(exam)
-        if (len(set(list_exam)) == len(list_exam)):
-            return False
-        return True
-
-
-#-------------------------Classes-------------------------#
-
-# Remove duplicates except first instance row, using all columns
-def remove_Dups(df, df_name):
-    print("~~~~~~~~~")
-
-    # Check if duplicated array empty
-    if df[df.duplicated()].empty:
-        print("No duplicates found for {}".format(df_name))
-
-    # Else drop duplicates
-    else:
-        print("Duplicates found for {}. Removing them!".format(df_name))
-        print(df[df.duplicated()])
-        df.drop_duplicates(inplace=True)
-    print(df)
-    print("~~~~~~~~~\n\n")
-    return df
-
-
-def main():
-    # No headers in csv files
-    teachers = pd.read_csv('./teachers.csv', header=None, names=["Name"])
-    courses = pd.read_csv('./courses.csv', header=None,
-                          names=["Code", "Title"])
-    studentNames = pd.read_csv(
-        './studentNames.csv', header=None, names=["Name"])
-
-    # Has a header, so including it
-    studentCourse = pd.read_csv('./studentCourse.csv')
-    # Rename the unnamed column
-    studentCourse.rename(columns={'Unnamed: 0': 'Sr#'}, inplace=True)
-
-    # Remove duplicates for all the pandas dataframes
-    teachers = remove_Dups(teachers, "Teachers")
-    courses = remove_Dups(courses, "Courses")
-    studentNames = remove_Dups(studentNames, "Student Names")
-    studentCourse = remove_Dups(studentCourse, "Student Course")
-
-    print(studentCourse.drop_duplicates(['Course Code']))
-
+from Chromosome import *
 
 #---------------------------------------------------------------#
-TOTAL_POPULATION = 100
+TOTAL_POPULATION = 20
 MAX_GENERATIONS = 300
 CROSS_PROBABILITY = 0.0
 MUTATION_PROBABILITY = 0.0
+STUDENT_GROUPS_GLOBAL = {}
+TEACHERS_GLOBAL = []
+COURSES_GLOBAL = []
 #---------------------------------------------------------------#
+
+# Calculate Fitness of population
+
+# Session -> Overlap
+# Random Number -> student_groups -> random course -> replace
+# ExamDuplication -> Remove Course
+
+
+def main():
+    courses_code_list, student_groups, teachers_list, class_IDs = create_Datasets()
+    global STUDENT_GROUPS_GLOBAL
+    global TEACHERS_GLOBAL
+    global COURSES_GLOBAL
+    STUDENT_GROUPS_GLOBAL = student_groups
+    TEACHERS_GLOBAL = deepcopy(teachers_list)
+    COURSES_GLOBAL = deepcopy(courses_code_list)
+    population = []
+    for i in range(TOTAL_POPULATION):
+        population.append(populate(courses_code_list,
+                                   student_groups, teachers_list, class_IDs))
+    population[15].days[2].sessions[0].display_Session()
+    population[15].days[2].sessions[1].display_Session()
+    calculate_fitness(population)
+
+
+def calculate_fitness(population):
+    ### Your Code Here ####
+    global STUDENT_GROUPS_GLOBAL
+    global TEACHERS_GLOBAL
+    global COURSES_GLOBAL
+    fitness_value = 0.0
+    print("---------------")
+    # print(STUDENT_GROUPS_GLOBAL)
+    # print(TEACHERS_GLOBAL)
+    print("---------------")
+    for i, chromo in enumerate(population):
+        for j, days in enumerate(chromo.days):
+            for k, session in enumerate(days.sessions):
+                for l, student_group in enumerate(session.studentGroups):
+                    # Remove student that is not enrolled in
+                    # at least 3 courses
+                    for student in student_group:
+                        if not student.is_Valid:
+                            population[i].days[j].sessions[k].studentGroups[l].remove(
+                                student)
+                            for key in STUDENT_GROUPS_GLOBAL:
+                                STUDENT_GROUPS_GLOBAL[key].remove(student)
+
+                # Replace exam that is overlapping with
+                # student's courses
+                for l, grp1 in enumerate(session.studentGroups):
+                    for n, grp2 in enumerate(session.studentGroups):
+                        if l is not n:
+                            count = 0
+                            while(Student("").groups_Overlap(grp1, grp2)):
+                                random_course = COURSES_GLOBAL[randint(
+                                    0, len(COURSES_GLOBAL)-1)]
+                                random_group = STUDENT_GROUPS_GLOBAL[random_course]
+                                if (count < 1000):
+                                    population[i].days[j].sessions[k].studentGroups[n] = random_group
+                                    population[i].days[j].sessions[k].courseIDs[n] = random_course
+                                    grp2 = random_group
+                                elif (count < 2000):
+                                    population[i].days[j].sessions[k].studentGroups[l] = random_group
+                                    population[i].days[j].sessions[k].courseIDs[l] = random_course
+                                    grp1 = random_group
+                                else:
+                                    fitness_value -= 1
+                                    break
+                                # print(i, end=" ")
+                                count += 1
+
+                # Replace teachers who are duplicates in the session
+                for l, teacher1 in enumerate(session.teachers):
+                    for m, teacher2 in enumerate(session.teachers):
+                        if l is not m:
+                            while (teacher1 == teacher2):
+                                random_teacher = TEACHERS_GLOBAL[randint(
+                                    0, len(TEACHERS_GLOBAL))]
+                                population[i].days[j].sessions[k].teachers[m] = random_teacher
+                                teacher2 = random_teacher
+
+            for k, session1 in enumerate(days.sessions):
+                for l, session2 in enumerate(days.sessions):
+                    if k is not l:
+                        while (set(session1.teachers) & set(session2.teachers)):
+                            random_teacher = TEACHERS_GLOBAL[randint(
+                                0, len(TEACHERS_GLOBAL))]
+                            random_int = randint(0, len(session2.teachers))
+                            population[i].days[j].sessions[l].teachers[random_int] = random_teacher
+                            session2.teachers[random_int] = random_teacher
+
+    return population
 
 
 def tester():
@@ -275,4 +171,5 @@ def tester():
     print("Exam Duplication on days: ", chromo.duplicate_Exams())
 
 
-tester()
+# tester()
+main()
