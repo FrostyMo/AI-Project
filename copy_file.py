@@ -110,6 +110,22 @@ def roulette_wheel_selection(population):
     # print("The Chromo Selected has fitness: ", chromosome.fitness)
     return chromosome
 
+def check_day(rand_day,days):
+    for session in days.sessions:
+        for course in session.courseIDs:
+            for i in range(len(rand_day.sessions[0].courseIDs)):
+                    if rand_day.sessions[0].courseIDs[i]== course:
+                        return True
+            for i in range(len(rand_day.sessions[1].courseIDs)):
+                    if rand_day.sessions[0].courseIDs[i]== course:
+                        return True
+    
+def day_duplicate_exams(day):
+    list_exam=[]
+    for session in day.sessions:
+        for exam in session.courseIDs:
+            list_exam.append(exam)
+    return len(list_exam) - len(set(list_exam))
 
 def cross_Over(population):
     crossed_population = []
@@ -132,6 +148,12 @@ def cross_Over(population):
             for shift in range(pointer):
                 population[parent_a.index].days[shift], population[parent_b.index].days[
                     shift] = population[parent_b.index].days[shift], population[parent_a.index].days[shift]
+                
+            # chromo parent_a  days->sessions->courseIDs(dup)
+            # for k,day in enumerate(parent_a.days):
+            #     print("duplicate exams on day{}:".format(k),day_duplicate_exams(day))
+            print("Number of duplicate exams A:",parent_a.duplicate_Exams())
+            print("Number of duplicate exams B:",parent_b.duplicate_Exams())
             population_copy = deepcopy(population)
             crossed_population.append(population_copy[parent_a.index])
             crossed_population.append(population_copy[parent_b.index])
@@ -139,11 +161,7 @@ def cross_Over(population):
         crossed_population[i].index = i
     return crossed_population
 
-def check_day(rand_day,population):
-    for chromo2 in population:
-                for day in chromo2.days:
-                    if rand_day== day:
-                        return True
+
                         
     return False
 def mutate(population):
@@ -153,7 +171,7 @@ def mutate(population):
     global TEACHERS_GLOBAL
     global CLASS_IDS_GLOBAL
     check = False
-    for chromo in population:
+    for l,chromo in enumerate(population):
         if randint(0, 100) <= MUTATION_PROBABILITY * 100:
             new_chromo = populate(
                 COURSES_GLOBAL, STUDENT_GROUPS_GLOBAL, TEACHERS_GLOBAL, CLASS_IDS_GLOBAL)
@@ -165,15 +183,16 @@ def mutate(population):
             print(new_chromo.days[random_day1].sessions[1].courseIDs)
             # print("day2:", random_day2)
             print("in org population:")
-            for chromo2 in population:
-                for day in chromo2.days:
-                    print(day.sessions[0].courseIDs)
-                    print(day.sessions[1].courseIDs)
-                    if new_chromo.days[random_day1]== day:
-                        print("dupp days")
+            print( population[l].days[random_day2].sessions[0].courseIDs)
+            print( population[l].days[random_day2] .sessions[1].courseIDs)
+            # if new_chromo.days[random_day1]== day:
+            #     print("dupp days")
             
-            while check_day(deepcopy(new_chromo.days[random_day1]),deepcopy(population)):
+            while check_day(deepcopy(new_chromo.days[random_day1]),deepcopy(population[l].days[random_day2])):
+                new_chromo = populate(
+                COURSES_GLOBAL, STUDENT_GROUPS_GLOBAL, TEACHERS_GLOBAL, CLASS_IDS_GLOBAL)
                 random_day1 = randint(0, new_chromo.days_count-1)
+                print("new random day:",random_day1)
                 print("dup days")
             print("day1 new:", random_day1)
             population[chromo.index].days[random_day2] = new_chromo.days[random_day1]
