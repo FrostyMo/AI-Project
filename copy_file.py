@@ -139,22 +139,43 @@ def cross_Over(population):
         crossed_population[i].index = i
     return crossed_population
 
-
+def check_day(rand_day,population):
+    for chromo2 in population:
+                for day in chromo2.days:
+                    if rand_day== day:
+                        return True
+                        
+    return False
 def mutate(population):
     # mutate_population = []
     global COURSES_GLOBAL
     global STUDENT_GROUPS_GLOBAL
     global TEACHERS_GLOBAL
     global CLASS_IDS_GLOBAL
-
+    check = False
     for chromo in population:
         if randint(0, 100) <= MUTATION_PROBABILITY * 100:
             new_chromo = populate(
                 COURSES_GLOBAL, STUDENT_GROUPS_GLOBAL, TEACHERS_GLOBAL, CLASS_IDS_GLOBAL)
             random_day1 = randint(0, new_chromo.days_count-1)
             random_day2 = randint(0, chromo.days_count-1)
-            # print("day1:", random_day1)
+            print("day1 old:", random_day1)
+            print("in rand chromo:")
+            print(new_chromo.days[random_day1].sessions[0].courseIDs)
+            print(new_chromo.days[random_day1].sessions[1].courseIDs)
             # print("day2:", random_day2)
+            print("in org population:")
+            for chromo2 in population:
+                for day in chromo2.days:
+                    print(day.sessions[0].courseIDs)
+                    print(day.sessions[1].courseIDs)
+                    if new_chromo.days[random_day1]== day:
+                        print("dupp days")
+            
+            while check_day(deepcopy(new_chromo.days[random_day1]),deepcopy(population)):
+                random_day1 = randint(0, new_chromo.days_count-1)
+                print("dup days")
+            print("day1 new:", random_day1)
             population[chromo.index].days[random_day2] = new_chromo.days[random_day1]
     return population
 
