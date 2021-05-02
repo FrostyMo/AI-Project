@@ -123,11 +123,13 @@ class Day:
 
     def __init__(self):
         self.sessions = []
+        self.total_exams = 0
 
     # Add only if 2 sessions not added already
     def add_Session(self, session):
         if (len(self.sessions) < self.max_ses):
             self.sessions.append(session)
+            self.total_exams += session.num_exams
             return True
         return False
 
@@ -143,9 +145,14 @@ class Day:
 class Chromosome:
     max_days = 10
 
-    def __init__(self, days=[]):
-        self.days = days
+    def __init__(self, days=None):
+        if days == None:
+            self.days = []
+        else:
+            self.days = days
         self.days_count = 0
+        self.fitness = 0
+        self.index = 'a'
 
     def add_Day(self, day):
         if (len(self.days) < 10):
@@ -160,9 +167,7 @@ class Chromosome:
             for session in day.sessions:
                 for exam in session.courseIDs:
                     list_exam.append(exam)
-        if (len(set(list_exam)) == len(list_exam)):
-            return False
-        return True
+        return len(list_exam) - len(set(list_exam))
 
 
 #-------------------------Classes-------------------------#
@@ -253,21 +258,21 @@ def populate(courses_code_list, student_Groups, teachers, classIDs):
     N = len(courses_code_list)
     a = np.arange(0, N)
     b = np.random.choice(a, N, replace=False)
-    print(b)
-    print(len(b))
+    # print(b)
+    # print(len(b))
     courses_random_list = []
     for i in range(N):
         courses_random_list.append(courses_code_list[b[i]])
 
-    print(courses_random_list)
+    # print(courses_random_list)
 
-    exams_per_day = randint(2, 10)
-    print('{}---------------------'.format(exams_per_day))
+    exams_per_day = randint(3, 10)
+    # print('{}---------------------'.format(exams_per_day))
     i = 0
     count = 0
     days = []
     while (i < len(courses_random_list)):
-        print(courses_random_list[i:i+exams_per_day])
+        # print(courses_random_list[i:i+exams_per_day])
         my_list = courses_random_list[i:i+exams_per_day]
         my_list_copy = deepcopy(my_list)
         session1 = Session()
@@ -275,7 +280,7 @@ def populate(courses_code_list, student_Groups, teachers, classIDs):
         for j in range(int(exams_per_day/2)):
             my_list_size = len(my_list_copy)
             adder = 0
-            if j < my_list_size:
+            if j < my_list_size:  # 0  4, 1   5, 2   6, 3   7,
                 session1.add_to_Session(teachers[randint(
                     0, len(teachers)-1)], my_list_copy[j], student_Groups[my_list_copy[j]], classIDs[count], 3)
             if j+int(exams_per_day/2) < my_list_size:
@@ -283,6 +288,10 @@ def populate(courses_code_list, student_Groups, teachers, classIDs):
                 session2.add_to_Session(teachers[randint(
                     0, len(teachers)-1)], my_list_copy[adder], student_Groups[my_list_copy[adder]], classIDs[count], 3)
             count += 1
+            if exams_per_day % 2 is not 0 and j == int(exams_per_day/2)-1 and j+int(exams_per_day/2)+1 < my_list_size:
+                session1.add_to_Session(teachers[randint(
+                    0, len(teachers)-1)], my_list_copy[j+int(exams_per_day/2)+1], student_Groups[my_list_copy[j+int(exams_per_day/2)+1]], classIDs[count], 3)
+
         day = Day()
         day.add_Session(session1)
         day.add_Session(session2)
