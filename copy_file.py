@@ -177,7 +177,7 @@ def mutate(population):
                 COURSES_GLOBAL, STUDENT_GROUPS_GLOBAL, TEACHERS_GLOBAL, CLASS_IDS_GLOBAL)
             random_day1 = randint(0, new_chromo.days_count-1)
             random_day2 = randint(0, chromo.days_count-1)
-            print("day1 old:", random_day1)
+            print("day1:", random_day1)
             print("in rand chromo:")
             print(new_chromo.days[random_day1].sessions[0].courseIDs)
             print(new_chromo.days[random_day1].sessions[1].courseIDs)
@@ -188,13 +188,13 @@ def mutate(population):
             # if new_chromo.days[random_day1]== day:
             #     print("dupp days")
             
-            while check_day(deepcopy(new_chromo.days[random_day1]),deepcopy(population[l].days[random_day2])):
-                new_chromo = populate(
-                COURSES_GLOBAL, STUDENT_GROUPS_GLOBAL, TEACHERS_GLOBAL, CLASS_IDS_GLOBAL)
-                random_day1 = randint(0, new_chromo.days_count-1)
-                print("new random day:",random_day1)
-                print("dup days")
-            print("day1 new:", random_day1)
+            # while check_day(deepcopy(new_chromo.days[random_day1]),deepcopy(population[l].days[random_day2])):
+            #     new_chromo = populate(
+            #     COURSES_GLOBAL, STUDENT_GROUPS_GLOBAL, TEACHERS_GLOBAL, CLASS_IDS_GLOBAL)
+            #     random_day1 = randint(0, new_chromo.days_count-1)
+            #     print("new random day:",random_day1)
+            #     print("dup days")
+            # print("day1 new:", random_day1)
             population[chromo.index].days[random_day2] = new_chromo.days[random_day1]
     return population
 
