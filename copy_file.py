@@ -113,7 +113,8 @@ def roulette_wheel_selection(population):
 
 def cross_Over(population):
     crossed_population = []
-
+    global STUDENT_GROUPS_GLOBAL
+    global COURSES_GLOBAL
     # dimensions = ["Day", "Session", "Student Group", "Teacher"]
     while len(crossed_population) < len(population):
 
@@ -132,6 +133,14 @@ def cross_Over(population):
             for shift in range(pointer):
                 population[parent_a.index].days[shift], population[parent_b.index].days[
                     shift] = population[parent_b.index].days[shift], population[parent_a.index].days[shift]
+            if population[parent_a.index].total_exams() == len(COURSES_GLOBAL):
+                print("Resolving Conflicts in Crossover A")
+                population[parent_a.index].resolve_Duplicates(
+                    STUDENT_GROUPS_GLOBAL, COURSES_GLOBAL)
+            if population[parent_b.index].total_exams() == len(COURSES_GLOBAL):
+                print("Resolving Conflicts in Crossover B")
+                population[parent_b.index].resolve_Duplicates(
+                    STUDENT_GROUPS_GLOBAL, COURSES_GLOBAL)
             population_copy = deepcopy(population)
             crossed_population.append(population_copy[parent_a.index])
             crossed_population.append(population_copy[parent_b.index])
@@ -155,12 +164,18 @@ def mutate(population):
             random_day2 = randint(0, chromo.days_count-1)
             # print("day1:", random_day1)
             # print("day2:", random_day2)
+
             population[chromo.index].days[random_day2] = new_chromo.days[random_day1]
+            if population[chromo.index].total_exams == len(COURSES_GLOBAL):
+                print("Resolving Conflicts in mutation")
+                population[chromo.index].resolve_Duplicates(
+                    STUDENT_GROUPS_GLOBAL, COURSES_GLOBAL)
     return population
 
 
 def best_Schedule(population):
     best = 0
+
     for chromo in population:
         if chromo.fitness > best:
             best = chromo.fitness

@@ -169,10 +169,54 @@ class Chromosome:
                     list_exam.append(exam)
         return len(list_exam) - len(set(list_exam))
 
+    # Returns index of session and courseID in that session
+    def find_exam(self, day_index, exam):
+        for i, session in enumerate(self.days[day_index].sessions):
+            for j, exam1 in enumerate(session.courseIDs):
+                if exam == exam1:
+                    return i, j
+        return -1, -1
+
+    def total_exams(self):
+        exams = sum(day.total_exams for day in self.days)
+        return exams
+
+    def resolve_Duplicates(self, STUDENT_GROUPS_GLOBAL, courses_list):
+        list_exam = []
+        set_exam = []
+        for day in self.days:
+            list_exam_day = []
+            for session in day.sessions:
+                for exam in session.courseIDs:
+                    list_exam_day.append(exam)
+                    set_exam.append(exam)
+            list_exam.append(list_exam_day)
+
+        set_exam = set(set_exam)
+        count = 0
+        missing_exams = list(set(courses_list) - set_exam)
+        for i, exams_day in enumerate(list_exam):
+            for j, exams_day2 in enumerate(list_exam):
+                if j > i and set(exams_day).intersection(set(exams_day2)) is not None:
+                    for k, exam1 in enumerate(exams_day):
+                        for l, exam2 in enumerate(exams_day2):
+                            if l > k and exam1 == exam2:
+                                session_index, course_index = self.find_exam(
+                                    j, exam2)
+                                self.days[j].sessions[session_index].courseIDs[course_index] = missing_exams[count]
+                                self.days[j].sessions[session_index].studentGroups[course_index] = STUDENT_GROUPS_GLOBAL[missing_exams[count]]
+                                count += 1
+    # -> Total = [Math, Science, History, Isl, CS, PF, OOD, OOP, Drawing]
+    # -> [Math, Science, History]
+    # -> [Math, CS, History]
+    # -> [CS, PF, OOP]
+    # -> Total - [Math, Science, History, CS, PF, OOP] = [Isl, OOD, Drawing]
 
 #-------------------------Classes-------------------------#
 
 # Remove duplicates except first instance row, using all columns
+
+
 def remove_Dups(df, df_name, col_name=None):
     print("~~~~~~~~~")
 
