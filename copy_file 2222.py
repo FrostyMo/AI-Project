@@ -62,7 +62,7 @@ def calculate_fitness(population):
 
     # Value of fitness in terms of exams per day
     #relativity = [0.1, 0.1, 0.5, 0.75, 0.8, 1, 1, 1, 0.8, 0.5, 0.5]
-    relativity = [1, 1, 0.4, 5, 5, 6, 6, 1, 1, 1, 1]
+    relativity = [1, 1, 0.8, 5, 0.5, 0.6, 0.3, 0.1, 0.1, 0.1, 0.1]
 
     # -> Overlapping Students, Overlapping Teachers, Consecutive Teachers, Duplicate Exams
     # -> 100                   10                    10                    100
@@ -72,20 +72,19 @@ def calculate_fitness(population):
         total_exams = 0
         for day in chromo.days:
             for session in day.sessions:
-                # print(session.overlapping_Students())
-                if session.overlapping_Students() > 0:
+
+                if session.overlapping_Students() > 10:
                     count_conflict += session.overlapping_Students()*200
-                # count_conflict += session.overlapping_Students()
+
                 count_conflict += session.overlapping_Teachers()
-                # session.display_Session()
-                # print(session.teachers)
-            count_conflict += day.consecutive_Teachers()
+
+            count_conflict += day.consecutive_Teachers()*100
             total_exams += day.total_exams
         # print(count_conflict)
         if chromo.duplicate_Exams() > 0:
             count_conflict += chromo.duplicate_Exams() * 100
         if count_conflict == 0:
-            fitness_values.append(1.0)
+            fitness_values.append(10000.0)
         else:
             fitness_values.append(1/count_conflict)
         # num_exams = 0
