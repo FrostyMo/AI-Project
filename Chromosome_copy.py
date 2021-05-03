@@ -14,6 +14,14 @@ class Student:
         else:
             self.courses = courses1
 
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+        return result
+
     # Add a course for the student
     def add_Course(self, course):
         self.courses.append(course)
@@ -42,11 +50,20 @@ class Student:
     # Check with 2 groups as @param
     def groups_Overlap(self, grp1, grp2):
         count_conflict = 0
+        # for student1 in grp1:
+        #     for student2 in grp2:
+        #         if student1.name == student2.name:
+        #             count_conflict += 1
+        #             break
+        student_list1 = []
+        student_list2 = []
         for student1 in grp1:
-            for student2 in grp2:
-                if student1.name == student2.name:
-                    count_conflict += 1
-                    break
+            student_list1.append(student1.name)
+        for student2 in grp2:
+            student_list2.append(student2.name)
+
+        count_conflict = len(
+            set(student_list1).intersection(set(student_list2)))
         return count_conflict
 
     # Check if at least 3 courses assigned
@@ -74,6 +91,14 @@ class Session:
         self.duration = 3
         self.classRoomIDs = []
         self.num_exams = 0
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+        return result
 
     def add_to_Session(self, teacher, courseID, studentGroup, classRoomID, duration=3):
         self.teachers.append(teacher)
@@ -125,6 +150,14 @@ class Day:
         self.sessions = []
         self.total_exams = 0
 
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+        return result
+
     # Add only if 2 sessions not added already
     def add_Session(self, session):
         if (len(self.sessions) < self.max_ses):
@@ -153,6 +186,14 @@ class Chromosome:
         self.days_count = 0
         self.fitness = 0
         self.index = 'a'
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+        return result
 
     def add_Day(self, day):
         if (len(self.days) < self.max_days):
@@ -195,7 +236,9 @@ class Chromosome:
         set_exam = set(set_exam)
         count = 0
         missing_exams = list(set(courses_list) - set_exam)
-        print("Missing exams:", missing_exams)
+        # print("Missing exams:", missing_exams)
+        if len(missing_exams) == 0:
+            return
         for i, exams_day in enumerate(list_exam):
             for j, exams_day2 in enumerate(list_exam):
                 if j <= i:
@@ -206,7 +249,7 @@ class Chromosome:
                             if exam1 == exam2 and count < len(missing_exams):
                                 session_index, course_index = self.find_exam(
                                     j, exam2)
-                                print("HI: ", missing_exams[count])
+                                # print("HI: ", missing_exams[count])
                                 self.days[j].sessions[session_index].courseIDs[course_index] = missing_exams[count]
                                 self.days[j].sessions[session_index].studentGroups[course_index] = STUDENT_GROUPS_GLOBAL[missing_exams[count]]
                                 count += 1
@@ -251,22 +294,22 @@ def create_Datasets():
         './studentNames.csv', header=None, names=["Name"])
 
     # Has a header, so including it
-    studentCourse = pd.read_csv('./studentCourse.csv')
+    studentCourse = pd.read_csv('./studentCourse1.csv')
     # Rename the unnamed column
-    studentCourse.rename(columns={'Unnamed: 0': 'Sr#'}, inplace=True)
+    # studentCourse.rename(columns={'Unnamed: 0': 'Sr#'}, inplace=True)
 
     # Remove duplicates for all the pandas dataframes
     teachers = remove_Dups(teachers, "Teachers")
     courses = remove_Dups(courses, "Courses", "Code")
     studentNames = remove_Dups(studentNames, "Student Names")
-    studentCourse = remove_Dups(studentCourse, "Student Course")
+    # studentCourse = remove_Dups(studentCourse, "Student Course")
 
-    print(studentCourse.drop_duplicates(['Course Code']))
+    # print(studentCourse.drop_duplicates(['Course Code']))
 
     class_IDs = ["C01", "C02", "C03", "C04",
                  "C05", "C06", "C07", "C08", "C09", "C10"]
-    courses_code_list = courses['Code'].tolist()
-    courses_title_list = courses['Title'].tolist()
+    courses_code_list = list(set(studentCourse['Course Code'].tolist()))
+    # courses_title_list = courses['Title'].tolist()
     student_names_list = studentNames['Name'].tolist()
     teachers_list = teachers['Name'].tolist()
 
@@ -286,18 +329,24 @@ def create_Datasets():
         student.display_Student()
 
     for course in courses_code_list:
-        print(course)
+        # print(course)
         for student in Student_List:
             if course in student.courses:
                 student_groups[course].append(student)
 
-    for key in student_groups:
-        print("Key {}: ".format(key))
-        print("[", end="")
-        for value in student_groups[key]:
-            print("'{}".format(value.name), end="' ")
-        print("]")
-        return courses_code_list, student_groups, teachers_list, class_IDs
+    # for key in student_groups:
+    #     print("Key {}: ".format(key))
+    #     print("[", end="")
+    #     for value in student_groups[key]:
+    #         print("'{}".format(value.name), end="' ")
+    #     print("]")
+    # print("[", end="")
+    # for value in student_groups['CG']:
+    #     print("'{}".format(value.name), end="' ")
+    # print("]")
+    # print(len(student_groups['CG']))
+    # print(student_groups['OOP'])
+    return courses_code_list, student_groups, teachers_list, class_IDs
 
 
 def populate(courses_code_list, student_Groups, teachers, classIDs):
@@ -314,7 +363,7 @@ def populate(courses_code_list, student_Groups, teachers, classIDs):
 
     # print(courses_random_list)
 
-    exams_per_day = randint(2, 10)
+    exams_per_day = randint(1, 9)
     # print('{}---------------------'.format(exams_per_day))
     i = 0
     count = 0
@@ -336,7 +385,7 @@ def populate(courses_code_list, student_Groups, teachers, classIDs):
                 session2.add_to_Session(teachers[randint(
                     0, len(teachers)-1)], my_list_copy[adder], student_Groups[my_list_copy[adder]], classIDs[count], 3)
             count += 1
-            if exams_per_day % 2 is not 0 and j == int(exams_per_day/2)-1 and j+int(exams_per_day/2)+1 < my_list_size:
+            if exams_per_day % 2 != 0 and j == int(exams_per_day/2)-1 and j+int(exams_per_day/2)+1 < my_list_size:
                 session1.add_to_Session(teachers[randint(
                     0, len(teachers)-1)], my_list_copy[j+int(exams_per_day/2)+1], student_Groups[my_list_copy[j+int(exams_per_day/2)+1]], classIDs[count], 3)
 
@@ -355,3 +404,6 @@ def populate(courses_code_list, student_Groups, teachers, classIDs):
         # print("\nSession 2:")
         # day.sessions[1].display_Session()
     return chromo
+
+
+create_Datasets()
