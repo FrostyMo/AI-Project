@@ -173,7 +173,27 @@ class Day:
         set1 = set(self.sessions[0].teachers)
         set2 = set(self.sessions[1].teachers)
         return len(set1.intersection(set2))
-
+    def consecutive_Students(self):
+        ses1_grp = []
+        ses2_grp = []
+        for exam_grps in self.sessions[0].studentGroups:
+            for grp in exam_grps:
+                #print("grp",grp.name)
+                #for g in grp:
+                ses1_grp.append(grp.name)
+        for exam_grps in self.sessions[1].studentGroups:
+            for grp in exam_grps:
+                #print("grp",grp.name)
+                # for i in range(len(grp)):
+                ses2_grp.append(grp.name)
+        set1 = set(ses1_grp)
+        set2 = set(ses2_grp)
+        return len(set1.intersection(set2))
+    def MG_before_CS(self):
+        # for exam_grps in self.sessions[0].studentGroups:
+        # for grp in exam_grps:
+            
+        pass
 
 class Chromosome:
     max_days = 13
