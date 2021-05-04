@@ -81,6 +81,7 @@ def calculate_fitness(population):
                 if overlap_Teachers > 0:
                     count_conflict += 10
 
+
             #soft constraint
             overlap_consec_Students = day.consecutive_Students()
             #print("consective students:",overlap_consec_Students)
