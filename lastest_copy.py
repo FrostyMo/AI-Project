@@ -4,10 +4,11 @@ from random import randint
 import collections
 from copy import deepcopy
 from Chromosome_copy import *
+import math
 
 #---------------------------------------------------------------#
 TOTAL_POPULATION = 10
-MAX_GENERATIONS = 1000
+MAX_GENERATIONS = 500
 CROSS_PROBABILITY = round(random.uniform(0.6, 1.0), 1)
 MUTATION_PROBABILITY = round(random.uniform(0.0, 0.5), 1)
 STUDENT_GROUPS_GLOBAL = {}
@@ -58,11 +59,12 @@ def calculate_fitness(population):
     # print("---------------")
     # print(STUDENT_GROUPS_GLOBAL)
     # print(TEACHERS_GLOBAL)
-    print("---------------")
+    # print("---------------")
 
     # Value of fitness in terms of exams per day
-    #relativity = [0.1, 0.1, 0.5, 0.75, 0.8, 1, 1, 1, 0.8, 0.5, 0.5]
-    relativity = [0.07, 0.6, 0.6, 0.3, 0.4, 1, 1, 0.001, 0.001, 0.001, 0.001]
+    # relativity = [0.1, 0.1, 0.5, 0.75, 0.8, 1, 1, 1, 0.8, 0.5, 0.5]
+    relativity = [0.07, 0.5, 0.5, 0.6, 0.6,
+                  0.4, 0.3, 0.001, 0.001, 0.001, 0.001]
 
     # -> Overlapping Students, Overlapping Teachers, Consecutive Teachers, Duplicate Exams
     # -> 100                   10                    10                    100
@@ -72,18 +74,21 @@ def calculate_fitness(population):
         for day in chromo.days:
             for session in day.sessions:
                 # print("im here")
-                overlap = session.overlapping_Students()
-                if overlap > 0:
-                    count_conflict += overlap*50000
+                # overlap = session.overlapping_Students()
+                # if overlap > 0:
+                #     count_conflict += overlap * 1000
+                overlap_Teachers = session.overlapping_Teachers()
+                if overlap_Teachers > 0:
+                    count_conflict += 10
 
-                count_conflict += session.overlapping_Teachers()
-
-            count_conflict += day.consecutive_Teachers()*100
+            overlap_consec_Teachers = day.consecutive_Teachers()
+            if overlap_consec_Teachers > 0:
+                count_conflict += 10
             total_exams += day.total_exams
 
         dup_exams = chromo.duplicate_Exams()
         if dup_exams > 0:
-            count_conflict += dup_exams * 1000000
+            count_conflict += dup_exams * 50000
         if count_conflict == 0:
             if (chromo.total_exams() == 0):
                 fitness_values.append(0.00000000000001)
@@ -95,18 +100,18 @@ def calculate_fitness(population):
         # num_exams = 0
         # num_exams += chromo.days[0].total_exams
         # fitness_values[-1] *= relativity[num_exams]
-        # for day in chromo.days:
-        #     num_exams = day.total_exams
-        #     fitness_values[-1] *= relativity[num_exams]
+        for day in chromo.days:
+            num_exams = day.total_exams
+            fitness_values[-1] *= relativity[num_exams]
 
-        if (total_exams != len(COURSES_GLOBAL)):
-            fitness_values[-1] *= 0.00001
-        else:
-            fitness_values[-1] *= 10
+        if (total_exams != len(COURSES_GLOBAL) or chromo.days_count >= len(COURSES_GLOBAL)/2):
+            fitness_values[-1] *= 0.000001
+        # else:
+        #     fitness_values[-1] *= 10
         population[i].fitness = fitness_values[-1]
         population[i].index = i
-        print("Fitness of Chromosome {} = {}".format(
-            i, fitness_values[-1]))
+        # print("Fitness of Chromosome {} = {}".format(
+        # i, fitness_values[-1]))
     for i, chromo in enumerate(population):
         population[i].index = i
     return population
@@ -148,8 +153,8 @@ def cross_Over(population):
             # print("rand b:", random_b)
 
             parent_b = population[random_b]
-            #parent_b = roulette_wheel_selection(population)
-            #print("Out of wheel")
+            # parent_b = roulette_wheel_selection(population)
+            # print("Out of wheel")
             # print("parent b:", parent_b.index)
             pointer = randint(1, min(len(parent_a.days), len(parent_b.days)))
 
@@ -172,7 +177,8 @@ def cross_Over(population):
             if len(crossed_population) < len(population):
                 crossed_population.append(deepcopy(population[parent_b.index]))
         else:
-            crossed_population.append(deepcopy(best_Schedule(population)))
+            crossed_population.append(
+                deepcopy(roulette_wheel_selection(population)))
     for i in range(len(crossed_population)):
         crossed_population[i].index = i
     return crossed_population
@@ -207,10 +213,19 @@ def best_Schedule(population):
     # print("Best Schedule")
     best = 0
     index = 0
-
+    min_overlap = math.inf
+    min_overlap_chromo = math.inf
     for i, chromo in enumerate(population):
-        if chromo.fitness > best:
+        if chromo.fitness >= best:
+            # for day in chromo.days:
+            #     for session in day.sessions:
+            #         # print("im here")
+            #         overlap = session.overlapping_Students()
+            #         if overlap < min_overlap:
+            #             min_overlap = overlap
+            # if min_overlap < min_overlap_chromo:
             best = chromo.fitness
+            min_overlap_chromo = min_overlap
             index = i
     return deepcopy(population[index])
 
@@ -228,6 +243,32 @@ def GA(population):
             best_Chromo = temp_best
         elif best_Chromo.fitness < temp_best.fitness:
             best_Chromo = temp_best
+        if i % 50 == 0:
+            print("{} iterations passed".format(i))
+            print("BEST SOLUTION AFTER {} ITERATIONS: ".format(
+                i), best_Chromo.fitness)
+            best_courses_list = []
+            for j, day in enumerate(best_Chromo.days):
+                print("Day {}...\nSession 1:".format(j+1))
+                print(day.sessions[0].courseIDs)
+                best_courses_list.append(day.sessions[0].courseIDs)
+                best_courses_list.append(day.sessions[1].courseIDs)
+                print(day.sessions[0].teachers)
+                print("Student_Overlap: ",
+                      day.sessions[0].overlapping_Students())
+                print("Session 2:")
+                print(day.sessions[1].courseIDs)
+                print(day.sessions[1].teachers)
+                print("Student_Overlap: ",
+                      day.sessions[1].overlapping_Students())
+
+            best_courses = []
+            for list_exam in best_courses_list:
+                for exam in list_exam:
+                    best_courses.append(exam)
+            print("Courses Remaining: ", set(
+                COURSES_GLOBAL) - set(best_courses))
+            print("Best Courses: ", sorted(best_courses))
 
     print("BEST SOLUTION FOUND WITH FITNESS: ", best_Chromo.fitness)
     best_courses_list = []
@@ -317,6 +358,7 @@ def tester():
 
 # tester()
 main()
+
 
 
 # Day 1...
