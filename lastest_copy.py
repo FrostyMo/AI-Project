@@ -81,6 +81,14 @@ def calculate_fitness(population):
                 if overlap_Teachers > 0:
                     count_conflict += 10
 
+
+            #soft constraint
+            overlap_consec_Students = day.consecutive_Students()
+            #print("consective students:",overlap_consec_Students)
+            if overlap_consec_Students > 0:
+                count_conflict += 5
+
+            
             overlap_consec_Teachers = day.consecutive_Teachers()
             if overlap_consec_Teachers > 0:
                 count_conflict += 10
@@ -200,7 +208,7 @@ def mutate(population):
             random_day2 = randint(0, chromo.days_count-1)
             # print("day1:", random_day1)
             # print("day2:", random_day2)
-
+            #print("mutation")
             population[chromo.index].days[random_day2] = new_chromo.days[random_day1]
             if population[chromo.index].total_exams == len(COURSES_GLOBAL):
                 print("Resolving Conflicts in mutation")
@@ -233,7 +241,7 @@ def best_Schedule(population):
 def GA(population):
     print("MAX GENERATIONS: ", MAX_GENERATIONS)
     best_Chromo = None
-    for i in range(MAX_GENERATIONS):
+    for i in range(200):
         population = deepcopy(calculate_fitness(population))
         population = deepcopy(cross_Over(population))
         population = deepcopy(mutate(population))
@@ -358,6 +366,7 @@ def tester():
 
 # tester()
 main()
+
 
 
 # Day 1...
