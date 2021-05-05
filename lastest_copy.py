@@ -89,14 +89,15 @@ def calculate_fitness(population):
             overlap = day.consecutive_Teachers()
             if overlap > 0:
                 consecutive_Teachers += 5
-
+        MGbeforeCS = chromo.MG_before_CS()
+        #print("MG before CS count students:",MGbeforeCS)        
         duplicate_Exams = chromo.duplicate_Exams()
         total_Exams = chromo.total_exams()
         total_Days = chromo.days_count
         remaining_Exams = len(COURSES_GLOBAL) - total_Exams
 
         if overlap_student > 0:
-            FITNESS_CONSTANT -= overlap_student*10
+            FITNESS_CONSTANT -= overlap_student*20
         # if overlap_teacher > 0:
         #     FITNESS_CONSTANT -= 10
         if consecutive_Students > 0:
@@ -104,11 +105,11 @@ def calculate_fitness(population):
         # if consecutive_Teachers > 0:
             # FITNESS_CONSTANT -= 10
         if duplicate_Exams > 0:
-            FITNESS_CONSTANT -= 20*duplicate_Exams
+            FITNESS_CONSTANT -= 40*duplicate_Exams
         if abs(remaining_Exams) > 0:
             FITNESS_CONSTANT -= 20*remaining_Exams
         if total_Days >= len(COURSES_GLOBAL)/2:
-            FITNESS_CONSTANT -= 10*total_Days
+            FITNESS_CONSTANT -= 20*total_Days
 
         # fitness_values.append(1/conflicts)
         population[i].fitness = FITNESS_CONSTANT
@@ -144,7 +145,6 @@ def roulette_wheel_selection(population):
     # chromosome = population[3]
     # print("The Chromo Selected has fitness: ", chromosome.fitness)
     return chromosome
-
 
 def cross_Over(population):
     # print("Crossover")
@@ -197,7 +197,7 @@ def cross_Over(population):
         # print("DEEE Random In")
     for i in range(len(crossed_population)):
         crossed_population[i].index = i
-
+    #prev_parent = parent_a
     return crossed_population
 
 
@@ -213,11 +213,21 @@ def mutate(population):
         if random.random() <= MUTATION_PROBABILITY:
             new_chromo = populate(
                 COURSES_GLOBAL, STUDENT_GROUPS_GLOBAL, TEACHERS_GLOBAL, CLASS_IDS_GLOBAL)
+            #random_chromo = best_Schedule(population)
+            #random_day1 = randint(0, new_chromo.days_count-1)
             random_day1 = randint(0, new_chromo.days_count-1)
             random_day2 = randint(0, chromo.days_count-1)
+
+            # random_day3 = randint(0, chromo.days_count-1)
+            # while random_day2 == random_day3:
+            #     random_day3 = randint(0, chromo.days_count-1)
+
             # print("day1:", random_day1)
             # print("day2:", random_day2)
             # print("mutation")
+            # temp_chromo = population[chromo.index].days[random_day2]
+            # population[chromo.index].days[random_day2] = population[chromo.index].days[random_day3]
+            # population[chromo.index].days[random_day3] = temp_chromo
             population[chromo.index].days[random_day2] = new_chromo.days[random_day1]
             if population[chromo.index].total_exams == len(COURSES_GLOBAL):
                 print("Resolving Conflicts in mutation")
@@ -246,9 +256,14 @@ def best_Schedule(population):
 def GA(population):
     print("MAX GENERATIONS: ", MAX_GENERATIONS)
     best_Chromo = None
+    best_Chromo_list = []
+    same_count = 0
     for i in range(MAX_GENERATIONS):
         # print("1 in")
         population = deepcopy(calculate_fitness(population))
+        # if i == 0:
+        #     parent_a = roulette_wheel_selection(population)
+        #     prev_parent = parent_a
         # print("1 out")
         # print("Cross in")
         population = deepcopy(cross_Over(population))
@@ -269,6 +284,7 @@ def GA(population):
             best_Chromo = temp_best
         if best_Chromo.fitness < temp_best1.fitness:
             best_Chromo = temp_best1
+        best_Chromo_list.append(best_Chromo)
         if i % 50 == 0:
             print("{} iterations passed".format(i))
             print("BEST SOLUTION AFTER {} ITERATIONS: ".format(
@@ -287,6 +303,13 @@ def GA(population):
                 print(day.sessions[1].teachers)
                 print("Student_Overlap: ",
                       day.sessions[1].overlapping_Students())
+            if len(best_Chromo_list) >2:
+                if best_Chromo_list[-1] == best_Chromo_list[-2]:
+                    same_count+=1
+            else:
+                same_count=0
+            # if same_count>=100:
+            #      population = deepcopy(mutate(population))
 
             best_courses = []
             for list_exam in best_courses_list:

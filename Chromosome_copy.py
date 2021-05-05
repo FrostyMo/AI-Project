@@ -13,6 +13,7 @@ class Student:
             self.courses = []
         else:
             self.courses = courses1
+        self.check_MGCS = []
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -203,11 +204,7 @@ class Day:
         set2 = set(ses2_grp)
         return len(set1.intersection(set2))
 
-    def MG_before_CS(self):
-        # for exam_grps in self.sessions[0].studentGroups:
-        # for grp in exam_grps:
-
-        pass
+   
 
 
 class Chromosome:
@@ -294,6 +291,58 @@ class Chromosome:
                                 self.days[j].sessions[session_index].courseIDs[course_index] = missing_exams[count]
                                 self.days[j].sessions[session_index].studentGroups[course_index] = STUDENT_GROUPS_GLOBAL[missing_exams[count]]
                                 count += 1
+    def MG_before_CS(self):
+        list_courses=[]
+        yesMG=False
+        MGcourses_students = []
+        count = 0
+        # for day in self.days:
+        #     for exam_grp in day.sessions[0].studentGroups:
+        #         for exam_student in exam_grp:
+        #             for i in range(len(exam_student.courses)):
+        #                 course_str=exam_student.courses[i]
+        #                 if course_str[:2] == "MG":
+        #                     yesMG = True
+        #                     MGcourses_students.append(exam_student.name)
+
+        # #list of students with MG courses
+        # set_mgstudents = set(MGcourses_students)
+        MG = False
+        CS = False
+        for day in self.days:
+            for course in day.sessions[0].courseIDs:
+                for exam_grp in day.sessions[0].studentGroups:
+                    for i, exam_student in enumerate(exam_grp):
+                        if course in exam_student.courses:
+                            if course[:2] == "MG":
+                                print("init mg")
+                                exam_grp[i].check_MGCS.append("MG")
+                            elif course[:2] == "CS":
+                                print("init cs")
+                                exam_grp[i].check_MGCS.append("CS")
+                        if len(exam_grp[i].check_MGCS) == 1:
+                            print("in")
+                            if exam_grp[i].check_MGCS[0] == "CS":
+                                print("in2")
+                                count+=1
+                                continue
+                for exam_grp in day.sessions[1].studentGroups:
+                    for i, exam_student in enumerate(exam_grp):
+                        if course in exam_student.courses:
+                            if course[:2] == "MG":
+                                print("init mg2")
+                                exam_grp[i].check_MGCS.append("MG")
+                            elif course[:2] == "CS":
+                                print("init cs2")
+                                exam_grp[i].check_MGCS.append("CS")
+                        if len(exam_grp[i].check_MGCS) == 1:
+                            print("in2  1")
+                            if exam_grp[i].check_MGCS[0] == "CS":
+                                print("in22")
+                                count+=1
+                                continue
+
+        return count
     # -> Total = [Math, Science, History, Isl, CS, PF, OOD, OOP, Drawing]
     # -> [Math, Science, History] - exams_day
     # -> [Isl, CS, OOD] - exams_day2
@@ -444,7 +493,9 @@ def populate(courses_code_list, student_Groups, teachers, classIDs):
         # day.sessions[0].display_Session()
         # print("\nSession 2:")
         # day.sessions[1].display_Session()
+        chromo.MG_before_CS()
     return chromo
 
 
-create_Datasets()
+courses_code_list, student_groups, teachers_list, class_IDs = create_Datasets()
+populate(courses_code_list, student_groups, teachers_list, class_IDs)
