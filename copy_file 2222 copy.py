@@ -3,10 +3,10 @@ import random
 from random import randint
 import collections
 from copy import deepcopy
-from Chromosome_copy import *
+from Chromosome import *
 
 #---------------------------------------------------------------#
-TOTAL_POPULATION = 30
+TOTAL_POPULATION = 10
 MAX_GENERATIONS = 300
 CROSS_PROBABILITY = round(random.uniform(0.6, 1.0), 1)
 MUTATION_PROBABILITY = round(random.uniform(0.0, 0.5), 1)
@@ -62,7 +62,7 @@ def calculate_fitness(population):
 
     # Value of fitness in terms of exams per day
     #relativity = [0.1, 0.1, 0.5, 0.75, 0.8, 1, 1, 1, 0.8, 0.5, 0.5]
-    relativity = [1, 3, 0.3, 6, 0.5, 8, 0.2, 0.1, 0.1, 0.1, 0.1]
+    relativity = [1, 3, 0.3, 0.6, 0.5, 0.8, 0.2, 0.1, 0.1, 0.1, 0.1]
     #relativity =  [1, 1, 0.4, 5, 5, 6, 6, 1, 1, 1, 1]
 
     # -> Overlapping Students, Overlapping Teachers, Consecutive Teachers, Duplicate Exams
@@ -74,8 +74,8 @@ def calculate_fitness(population):
         for day in chromo.days:
             for session in day.sessions:
 
-                if session.overlapping_Students() > 2:
-                    count_conflict += session.overlapping_Students()*200
+                if session.overlapping_Students() > 10:
+                    count_conflict += session.overlapping_Students()*2000
 
                 count_conflict += session.overlapping_Teachers()
 
@@ -83,7 +83,7 @@ def calculate_fitness(population):
             total_exams += day.total_exams
         # print(count_conflict)
         if chromo.duplicate_Exams() > 0:
-            count_conflict += chromo.duplicate_Exams() * 100
+            count_conflict += chromo.duplicate_Exams() * 1000
         if count_conflict == 0:
             fitness_values.append(10000.0)
         else:
@@ -96,7 +96,7 @@ def calculate_fitness(population):
             fitness_values[-1] *= relativity[num_exams]
 
         if (total_exams != len(COURSES_GLOBAL)):
-            fitness_values[-1] *= 0.001
+            fitness_values[-1] *= 0.0001
         else:
             fitness_values[-1] += 100
         population[i].fitness = fitness_values[-1]
@@ -148,14 +148,14 @@ def cross_Over(population):
             for shift in range(pointer):
                 population[parent_a.index].days[shift], population[parent_b.index].days[
                     shift] = population[parent_b.index].days[shift], population[parent_a.index].days[shift]
-            if population[parent_a.index].total_exams() == len(COURSES_GLOBAL):
-                print("Resolving Conflicts in Crossover A")
-                population[parent_a.index].resolve_Duplicates(
-                    STUDENT_GROUPS_GLOBAL, COURSES_GLOBAL)
-            if population[parent_b.index].total_exams() == len(COURSES_GLOBAL):
-                print("Resolving Conflicts in Crossover B")
-                population[parent_b.index].resolve_Duplicates(
-                    STUDENT_GROUPS_GLOBAL, COURSES_GLOBAL)
+            # if population[parent_a.index].total_exams() == len(COURSES_GLOBAL):
+            #     print("Resolving Conflicts in Crossover A")
+            #     population[parent_a.index].resolve_Duplicates(
+            #         STUDENT_GROUPS_GLOBAL, COURSES_GLOBAL)
+            # if population[parent_b.index].total_exams() == len(COURSES_GLOBAL):
+            #     print("Resolving Conflicts in Crossover B")
+            #     population[parent_b.index].resolve_Duplicates(
+            #         STUDENT_GROUPS_GLOBAL, COURSES_GLOBAL)
             population_copy = deepcopy(population)
             crossed_population.append(population_copy[parent_a.index])
             crossed_population.append(population_copy[parent_b.index])

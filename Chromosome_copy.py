@@ -120,8 +120,20 @@ class Session:
 
         return count_conflict
 
+    def overlapping_Students1(self):
+        count_conflict = 0
+        grp1_names = []
+        for grp1 in self.studentGroups:
+            for grp in grp1:
+                grp1_names.append(grp.name)
+
+        if len(grp1_names) - len(set(grp1_names)) > 0:
+            return True
+        return False
+
     # Check whether a session has teachers that
     # have overlapping exams
+
     def overlapping_Teachers(self):
         return len(self.teachers) - len(set(self.teachers))
 
@@ -173,27 +185,30 @@ class Day:
         set1 = set(self.sessions[0].teachers)
         set2 = set(self.sessions[1].teachers)
         return len(set1.intersection(set2))
+
     def consecutive_Students(self):
         ses1_grp = []
         ses2_grp = []
         for exam_grps in self.sessions[0].studentGroups:
             for grp in exam_grps:
-                #print("grp",grp.name)
-                #for g in grp:
+                # print("grp",grp.name)
+                # for g in grp:
                 ses1_grp.append(grp.name)
         for exam_grps in self.sessions[1].studentGroups:
             for grp in exam_grps:
-                #print("grp",grp.name)
+                # print("grp",grp.name)
                 # for i in range(len(grp)):
                 ses2_grp.append(grp.name)
         set1 = set(ses1_grp)
         set2 = set(ses2_grp)
         return len(set1.intersection(set2))
+
     def MG_before_CS(self):
         # for exam_grps in self.sessions[0].studentGroups:
         # for grp in exam_grps:
-            
+
         pass
+
 
 class Chromosome:
     max_days = 13
@@ -221,6 +236,12 @@ class Chromosome:
             self.days_count += 1
             return True
         return False
+
+    def remove_Empty_Days(self):
+        for day in self.days:
+            if day.sessions[0].courseIDs is None and day.sessions[1].courseIDs is None:
+                self.days.remove(day)
+                self.days_count -= 1
 
     def duplicate_Exams(self):
         list_exam = []
@@ -371,7 +392,7 @@ def create_Datasets():
 
 def populate(courses_code_list, student_Groups, teachers, classIDs):
     # Span exams over 5 days
-    #exams_per_day = int(len(courses_code_list)/5)
+    # exams_per_day = int(len(courses_code_list)/5)
     N = len(courses_code_list)
     a = np.arange(0, N)
     b = np.random.choice(a, N, replace=False)
