@@ -2,9 +2,11 @@ import numpy as np
 import random
 from random import randint
 import collections
-from copy import deepcopy
-from Chromosome_copy import *
+from copy import deepcopy, copy
+from Chromosome import *
 import math
+
+# ********************* UNI'S DATASET ********************* #
 
 #---------------------------------------------------------------#
 TOTAL_POPULATION = 100
@@ -20,7 +22,9 @@ STUDENT_LIST_GLOBAL = []
 
 
 def main():
-    courses_code_list, student_groups, teachers_list, class_IDs, student_names_list = create_Datasets()
+    file_name = './studentCourse.csv'
+    courses_code_list, student_groups, teachers_list, class_IDs, student_names_list = create_Datasets(
+        file_name)
     global STUDENT_GROUPS_GLOBAL
     global TEACHERS_GLOBAL
     global COURSES_GLOBAL
@@ -55,6 +59,8 @@ def main():
 
         # mutate(population)
         # population = calculate_fitness(population)
+    # print(HARD_CONSTRAINTS)
+    # print(SOFT_CONSTRAINTS)
     GA(population)
 
 
@@ -78,12 +84,13 @@ def calculate_fitness(population):
     for i, chromo in enumerate(population):
         overlap_student = 0
         overlap_teacher = 0
-        consecutive_Students = 0
+        consecutive_Students = False
         consecutive_Teachers = 0
         weekend_days = 0
         population[i].remove_Empty_Days()
         chromo.remove_Empty_Days()
         FITNESS_CONSTANT = 100000
+        csBeforemg = 0
         # total_Conflicts = 0
         for j, day in enumerate(chromo.days):
             for session in day.sessions:
@@ -97,8 +104,11 @@ def calculate_fitness(population):
                 if overlap > 0:
                     # print("T")
                     overlap_teacher += overlap
-                if j+1 % 6 == 0 or j+1 % 7 == 0:
+
+                if (j+1) % 6 == 0 or (j+1) % 7 == 0:
+                    # print("IN")
                     if session.courseIDs is not None:
+                        # print("IN2")
                         weekend_days += 2
             overlap = day.consecutive_Students()
             if overlap > 0:
@@ -112,30 +122,60 @@ def calculate_fitness(population):
         total_Exams = chromo.total_exams()
         total_Days = chromo.days_count
         remaining_Exams = len(COURSES_GLOBAL) - total_Exams + duplicate_Exams
+
         # print("Rems: ", remaining_Exams)
-        if overlap_student > 0:
+        if chromo.CS_before_MG() == False:
+            #print("CS before MG")
+            population[i].soft["MG before CS"] = "Not Violated"
+
+        else:
+            FITNESS_CONSTANT -= 5
+            population[i].soft["MG before CS"] = "Violated"
+
+        if overlap_student > 4:
             # print("OS")
+            population[i].hard["Students Overlap"] = "Violated"
             FITNESS_CONSTANT -= overlap_student*40
+        else:
+            population[i].hard["Students Overlap"] = "Not Violated"
 
         if overlap_teacher > 0:
             # print("ttt")
+            population[i].hard["Teachers Overlap"] = "Violated"
             FITNESS_CONSTANT -= 10
+        else:
+            population[i].hard["Teachers Overlap"] = "Not Violated"
 
         if weekend_days > 0:
+            population[i].hard["Weekend"] = "Violated"
             FITNESS_CONSTANT -= weekend_days*20
-        # if consecutive_Students > 0:
-            # FITNESS_CONSTANT -= consecutive_Students
+        else:
+            population[i].hard["Weekend"] = "Not Violated"
+
+        if consecutive_Students > 0:
+            population[i].soft["Consecutive Exam"] = "Violated"
+            FITNESS_CONSTANT -= consecutive_Students
+        else:
+            population[i].soft["Consecutive Exam"] = "Not Violated"
+
         if consecutive_Teachers > 0:
             # print(" c t")
+            population[i].hard["Consecutive Teachers"] = "Violated"
             FITNESS_CONSTANT -= 10
+        else:
+            population[i].hard["Consecutive Teachers"] = "Not Violated"
         if duplicate_Exams > 0:
             # print("dup")
+            population[i].hard["Duplicate Course"] = "Violated"
             FITNESS_CONSTANT -= 20*duplicate_Exams
-
+        else:
+            population[i].hard["Duplicate Course"] = "Not Violated"
         if remaining_Exams > 0:
             # print("r")
+            population[i].hard["All Courses"] = "Violated"
             FITNESS_CONSTANT -= 20*remaining_Exams
-
+        else:
+            population[i].hard["All Courses"] = "Not Violated"
         # if total_Days >= len(COURSES_GLOBAL)/2:
         #     FITNESS_CONSTANT -= total_Days*5
 
@@ -180,6 +220,10 @@ def cross_Over(population, list_best):
     crossed_population = []
     global STUDENT_GROUPS_GLOBAL
     global COURSES_GLOBAL
+
+    for i, chromo in enumerate(list_best):
+        if i < 4:
+            crossed_population.append(chromo)
     # dimensions = ["Day", "Session", "Student Group", "Teacher"]
     while len(crossed_population) < len(population):
         random_b = randint(0, len(population)-1)
@@ -257,13 +301,16 @@ def GA(population):
     list_best = []
     for i in range(MAX_GENERATIONS):
 
-        population = deepcopy(calculate_fitness(population))
-
+        # population = deepcopy(calculate_fitness(population))
+        population = calculate_fitness(population)
         population = deepcopy(cross_Over(population, list_best))
+        # population = cross_Over(population, list_best)
 
         population = deepcopy(mutate(population))
+        # population = mutate(population)
 
-        population = deepcopy(calculate_fitness(population))
+        # population = deepcopy(calculate_fitness(population))
+        population = copy(calculate_fitness(population))
         temp_best, list_best_temp = best_Schedule(population)
         if best_Chromo == None:
             best_Chromo = temp_best
@@ -281,6 +328,9 @@ def GA(population):
             remaining_Exams = len(
                 COURSES_GLOBAL) - best_Chromo.total_exams() + best_Chromo.duplicate_Exams()
             print("Remaining Exams: ", remaining_Exams)
+            print("Total Days:", len(best_Chromo.days))
+            print("HARD CONSTRAINTS\n", best_Chromo.hard)
+            print("SOFT CONSTRAINTS\n", best_Chromo.soft)
             for j, day in enumerate(best_Chromo.days):
                 print("Day {}...\nSession 1:".format(j+1))
                 print(day.sessions[0].courseIDs)
@@ -307,6 +357,7 @@ def GA(population):
 
     print("BEST SOLUTION FOUND WITH FITNESS: ", best_Chromo.fitness)
     print("And duplicate exams: ", best_Chromo.duplicate_Exams())
+    print("Total Days:", len(best_Chromo.days))
     best_courses_list = []
     for i, day in enumerate(best_Chromo.days):
         print("Day {}...\nSession 1:".format(i+1))
