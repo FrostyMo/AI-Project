@@ -3,6 +3,7 @@ import pandas as pd
 from random import randint
 import collections
 from copy import deepcopy
+
 #-------------------------GLOBALS-------------------------#
 COURSES_BITS_GLOBAL = {}
 STUDENTS_BITS_GLOBAL = {}
@@ -402,22 +403,22 @@ def create_Datasets():
         './studentNames.csv', header=None, names=["Name"])
 
     # Has a header, so including it
-    studentCourse = pd.read_csv('./studentCourse1.csv')
+    studentCourse = pd.read_csv('./studentCourse.csv')
     # Rename the unnamed column
-    # studentCourse.rename(columns={'Unnamed: 0': 'Sr#'}, inplace=True)
+    studentCourse.rename(columns={'Unnamed: 0': 'Sr#'}, inplace=True)
 
     # Remove duplicates for all the pandas dataframes
     teachers = remove_Dups(teachers, "Teachers")
     courses = remove_Dups(courses, "Courses", "Code")
     studentNames = remove_Dups(studentNames, "Student Names")
-    # studentCourse = remove_Dups(studentCourse, "Student Course")
+    studentCourse = remove_Dups(studentCourse, "Student Course")
 
-    # print(studentCourse.drop_duplicates(['Course Code']))
+    print(studentCourse.drop_duplicates(['Course Code']))
 
     class_IDs = ["C01", "C02", "C03", "C04",
                  "C05", "C06", "C07", "C08", "C09", "C10"]
-    courses_code_list = list(set(studentCourse['Course Code'].tolist()))
-    # courses_title_list = courses['Title'].tolist()
+    courses_code_list = courses['Code'].tolist()
+    courses_title_list = courses['Title'].tolist()
     student_names_list = studentNames['Name'].tolist()
     teachers_list = teachers['Name'].tolist()
 
@@ -448,10 +449,9 @@ def create_Datasets():
     print(course_Bits)
     print(teacher_Bits)
     print(class_Bits)
-
     # Create Student() list
     Student_List = []
-    for student in student_names_list:
+    for i, student in enumerate(student_names_list):
         stud = Student(
             student, studentCourse['Course Code'].loc[studentCourse['Student Name'] == student].tolist())
         stud.student_To_Bits(np.binary_repr(i, binary_len_students))
@@ -465,27 +465,26 @@ def create_Datasets():
         for student in Student_List:
             if course in student.courses:
                 student_groups[course].append(student)
+
     COURSES_BITS_GLOBAL = course_Bits
     TEACHERS_BITS_GLOBAL = teacher_Bits
     CLASS_BITS_GLOBAL = class_Bits
+    # STUDENTS_BITS_GLOBAL = student_Bits
+
+    # print("HI")
     # for key in student_groups:
     #     print("Key {}: ".format(key))
     #     print("[", end="")
     #     for value in student_groups[key]:
     #         print("'{}".format(value.name), end="' ")
     #     print("]")
-    # print("[", end="")
-    # for value in student_groups['CG']:
-    #     print("'{}".format(value.name), end="' ")
-    # print("]")
-    # print(len(student_groups['CG']))
-    # print(student_groups['OOP'])
+
     return courses_code_list, student_groups, teachers_list, class_IDs, student_names_list
 
 
 def populate(courses_code_list, student_Groups, teachers, classIDs):
     # Span exams over 5 days
-    # exams_per_day = int(len(courses_code_list)/5)
+    #exams_per_day = int(len(courses_code_list)/5)
     N = len(courses_code_list)
     a = np.arange(0, N)
     b = np.random.choice(a, N, replace=False)
@@ -519,7 +518,7 @@ def populate(courses_code_list, student_Groups, teachers, classIDs):
                 session2.add_to_Session(teachers[randint(
                     0, len(teachers)-1)], my_list_copy[adder], student_Groups[my_list_copy[adder]], classIDs[count], 3)
             count += 1
-            if exams_per_day % 2 != 0 and j == int(exams_per_day/2)-1 and j+int(exams_per_day/2)+1 < my_list_size:
+            if exams_per_day % 2 is not 0 and j == int(exams_per_day/2)-1 and j+int(exams_per_day/2)+1 < my_list_size:
                 session1.add_to_Session(teachers[randint(
                     0, len(teachers)-1)], my_list_copy[j+int(exams_per_day/2)+1], student_Groups[my_list_copy[j+int(exams_per_day/2)+1]], classIDs[count], 3)
 
@@ -538,6 +537,3 @@ def populate(courses_code_list, student_Groups, teachers, classIDs):
         # print("\nSession 2:")
         # day.sessions[1].display_Session()
     return chromo
-
-
-create_Datasets()
