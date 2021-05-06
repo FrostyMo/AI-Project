@@ -6,7 +6,7 @@ from copy import deepcopy, copy
 from Chromosome import *
 import math
 
-# ********************* UNI'S DATASET ********************* #
+# ********************* OUR DATASET ********************* #
 
 #---------------------------------------------------------------#
 TOTAL_POPULATION = 100
@@ -22,7 +22,7 @@ STUDENT_LIST_GLOBAL = []
 
 
 def main():
-    file_name = './studentCourse.csv'
+    file_name = './studentCourse2.csv'
     courses_code_list, student_groups, teachers_list, class_IDs, student_names_list = create_Datasets(
         file_name)
     global STUDENT_GROUPS_GLOBAL
@@ -74,7 +74,7 @@ def calculate_fitness(population):
     # fitness_values = []
 
     # Value of fitness in terms of exams per day
-    relativity = [0.1, 0.1, 0.5, 0.75, 0.8, 0.1, 0.1, 0.1, 0.01, 0.01, 0.01]
+    # relativity = [0.1, 0.1, 0.5, 0.75, 0.8, 1, 1, 1, 0.8, 0.5, 0.5]
     # relativity = [0.07, 0.5, 0.5, 0.6, 0.6,
     #               0.4, 0.3, 0.001, 0.001, 0.001, 0.001]
 
@@ -89,7 +89,7 @@ def calculate_fitness(population):
         weekend_days = 0
         population[i].remove_Empty_Days()
         chromo.remove_Empty_Days()
-        FITNESS_CONSTANT = 100000.0
+        FITNESS_CONSTANT = 100000
         csBeforemg = 0
         # total_Conflicts = 0
         for j, day in enumerate(chromo.days):
@@ -105,8 +105,10 @@ def calculate_fitness(population):
                     # print("T")
                     overlap_teacher += overlap
 
-                if (j+1) % 8 == 0 or (j+1) % 9 == 0:
+                if (j+1) % 6 == 0 or (j+1) % 7 == 0:
+                    # print("IN")
                     if session.courseIDs is not None:
+                        # print("IN2")
                         weekend_days += 2
             overlap = day.consecutive_Students()
             if overlap > 0:
@@ -123,17 +125,17 @@ def calculate_fitness(population):
 
         # print("Rems: ", remaining_Exams)
         if chromo.CS_before_MG() == False:
-            # print("CS before MG")
+            #print("CS before MG")
             population[i].soft["MG before CS"] = "Not Violated"
 
         else:
             FITNESS_CONSTANT -= 5
             population[i].soft["MG before CS"] = "Violated"
+
         if overlap_student > 0:
-            population[i].hard["Students Overlap"] = "Violated"
-        if overlap_student > 12:
             # print("OS")
-            FITNESS_CONSTANT -= overlap_student*50
+            population[i].hard["Students Overlap"] = "Violated"
+            FITNESS_CONSTANT -= overlap_student*40
         else:
             population[i].hard["Students Overlap"] = "Not Violated"
 
@@ -146,7 +148,7 @@ def calculate_fitness(population):
 
         if weekend_days > 0:
             population[i].hard["Weekend"] = "Violated"
-            FITNESS_CONSTANT -= weekend_days*30
+            FITNESS_CONSTANT -= weekend_days*20
         else:
             population[i].hard["Weekend"] = "Not Violated"
 
@@ -165,19 +167,18 @@ def calculate_fitness(population):
         if duplicate_Exams > 0:
             # print("dup")
             population[i].hard["Duplicate Course"] = "Violated"
-            FITNESS_CONSTANT -= 50*duplicate_Exams
+            FITNESS_CONSTANT -= 20*duplicate_Exams
         else:
             population[i].hard["Duplicate Course"] = "Not Violated"
         if remaining_Exams > 0:
             # print("r")
             population[i].hard["All Courses"] = "Violated"
-            FITNESS_CONSTANT -= 50*remaining_Exams
+            FITNESS_CONSTANT -= 20*remaining_Exams
         else:
             population[i].hard["All Courses"] = "Not Violated"
         # if total_Days >= len(COURSES_GLOBAL)/2:
         #     FITNESS_CONSTANT -= total_Days*5
-        # for day in chromo.days:
-        #     FITNESS_CONSTANT *= relativity[day.total_exams]
+
         population[i].fitness = FITNESS_CONSTANT
         # print("Chromo {} with fitness {}".format(i, FITNESS_CONSTANT))
     for i, chromo in enumerate(population):
@@ -301,7 +302,7 @@ def GA(population):
     for i in range(MAX_GENERATIONS):
 
         # population = deepcopy(calculate_fitness(population))
-        population = deepcopy(calculate_fitness(population))
+        population = calculate_fitness(population)
         population = deepcopy(cross_Over(population, list_best))
         # population = cross_Over(population, list_best)
 
@@ -309,7 +310,7 @@ def GA(population):
         # population = mutate(population)
 
         # population = deepcopy(calculate_fitness(population))
-        population = deepcopy(calculate_fitness(population))
+        population = copy(calculate_fitness(population))
         temp_best, list_best_temp = best_Schedule(population)
         if best_Chromo == None:
             best_Chromo = temp_best
