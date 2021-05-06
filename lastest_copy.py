@@ -80,63 +80,65 @@ def calculate_fitness(population):
         overlap_teacher = 0
         consecutive_Students = 0
         consecutive_Teachers = 0
+        weekend_days = 0
+        population[i].remove_Empty_Days()
         chromo.remove_Empty_Days()
         FITNESS_CONSTANT = 100000
         # total_Conflicts = 0
-        for day in chromo.days:
+        for j, day in enumerate(chromo.days):
             for session in day.sessions:
+
                 overlap = session.overlapping_Students1()
-                # overlap = session.overlapping_Students()
+                # print("Students overlap:", overlap)
                 if overlap == True:
-                    # if overlap > 0:
-                    # FITNESS_CONSTANT -= 10
-                    # overlap_student += overlap
                     overlap_student += 2
 
                 overlap = session.overlapping_Teachers()
                 if overlap > 0:
-                    # FITNESS_CONSTANT -= 5
+                    # print("T")
                     overlap_teacher += overlap
+                if j+1 % 6 == 0 or j+1 % 7 == 0:
+                    if session.courseIDs is not None:
+                        weekend_days += 2
             overlap = day.consecutive_Students()
             if overlap > 0:
                 consecutive_Students += 2
-                # consecutive_Students += overlap
+
             overlap = day.consecutive_Teachers()
             if overlap > 0:
                 consecutive_Teachers += 5
-                # consecutive_Teachers += overlap
 
         duplicate_Exams = chromo.duplicate_Exams()
         total_Exams = chromo.total_exams()
         total_Days = chromo.days_count
         remaining_Exams = len(COURSES_GLOBAL) - total_Exams + duplicate_Exams
-        # overlap_student = overlap_student/len(STUDENT_LIST_GLOBAL)
-        # overlap_teacher = overlap_teacher/len(TEACHERS_GLOBAL)
-        # consecutive_Students = consecutive_Students/len(STUDENT_LIST_GLOBAL)
-        # consecutive_Teachers = consecutive_Teachers/len(TEACHERS_GLOBAL)
-        # duplicate_Exams = duplicate_Exams/len(COURSES_GLOBAL)
-        # remaining_Exams = remaining_Exams/len(COURSES_GLOBAL)
+        # print("Rems: ", remaining_Exams)
         if overlap_student > 0:
+            # print("OS")
             FITNESS_CONSTANT -= overlap_student*40
-            # FITNESS_CONSTANT -= overlap_student
+
         if overlap_teacher > 0:
+            # print("ttt")
             FITNESS_CONSTANT -= 10
+
+        if weekend_days > 0:
+            FITNESS_CONSTANT -= weekend_days*20
         # if consecutive_Students > 0:
             # FITNESS_CONSTANT -= consecutive_Students
         if consecutive_Teachers > 0:
+            # print(" c t")
             FITNESS_CONSTANT -= 10
         if duplicate_Exams > 0:
+            # print("dup")
             FITNESS_CONSTANT -= 20*duplicate_Exams
-            # FITNESS_CONSTANT -= duplicate_Exams*2
 
         if remaining_Exams > 0:
+            # print("r")
             FITNESS_CONSTANT -= 20*remaining_Exams
-            # FITNESS_CONSTANT -= remaining_Exams*2
-        if total_Days >= len(COURSES_GLOBAL)/2:
-            FITNESS_CONSTANT -= total_Days*5
-            # FITNESS_CONSTANT -= total_Days/len(COURSES_GLOBAL)
 
-        # fitness_values.append(1/conflicts)
+        # if total_Days >= len(COURSES_GLOBAL)/2:
+        #     FITNESS_CONSTANT -= total_Days*5
+
         population[i].fitness = FITNESS_CONSTANT
         # print("Chromo {} with fitness {}".format(i, FITNESS_CONSTANT))
     for i, chromo in enumerate(population):
@@ -276,6 +278,9 @@ def GA(population):
             print("BEST SOLUTION AFTER {} ITERATIONS: ".format(
                 i), best_Chromo.fitness)
             best_courses_list = []
+            remaining_Exams = len(
+                COURSES_GLOBAL) - best_Chromo.total_exams() + best_Chromo.duplicate_Exams()
+            print("Remaining Exams: ", remaining_Exams)
             for j, day in enumerate(best_Chromo.days):
                 print("Day {}...\nSession 1:".format(j+1))
                 print(day.sessions[0].courseIDs)
@@ -284,6 +289,7 @@ def GA(population):
                 print(day.sessions[0].teachers)
                 print("Student_Overlap: ",
                       day.sessions[0].overlapping_Students())
+
                 print("Session 2:")
                 print(day.sessions[1].courseIDs)
                 print(day.sessions[1].teachers)

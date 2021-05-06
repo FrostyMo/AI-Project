@@ -301,7 +301,8 @@ class Chromosome:
         return False
 
     def remove_Empty_Days(self):
-        for day in self.days:
+        for i, day in enumerate(self.days):
+            # if (i % 5 != 0 or i % 6 != 0):
             if day.sessions[0].courseIDs is None and day.sessions[1].courseIDs is None:
                 self.days.remove(day)
                 self.days_count -= 1
@@ -497,7 +498,7 @@ def populate(courses_code_list, student_Groups, teachers, classIDs):
 
     # print(courses_random_list)
 
-    exams_per_day = randint(1, 9)
+    exams_per_day = randint(1, 6)
     # print('{}---------------------'.format(exams_per_day))
     i = 0
     count = 0
